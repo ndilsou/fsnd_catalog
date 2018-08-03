@@ -21,5 +21,9 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False, unique=True)
+    description = Column(String(500))
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship(User)
+
+    def __repr__(self):
+        return "<User{{name={name}}, owner={owner}})>".format(name=self.name, owner=self.owner.username)

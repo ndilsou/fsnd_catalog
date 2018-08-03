@@ -5,29 +5,50 @@ import tempfile
 import catalog
 import catalog.models as models
 
-from test.setup_test_db import make_record
+# from test.setup_test_db import make_record
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def app():
     return catalog.app
 
 
 @pytest.fixture(scope="module")
-def db_session(app):
-    from catalog.database import Session
-
+def database(app):
     try:
 
         db_fd, test_db = tempfile.mkstemp(suffix=".db")
         app.config["DATABASE"] = "sqlite:///{}".format(test_db)
 
         catalog.database.init_db(catalog.app)
-        yield Session
+        yield catalog.database
 
     finally:
         os.close(db_fd)
         os.unlink(test_db)
+
+
+@pytest.fixture(scope="function")
+def db_session(database):
+    from catalog.database import Session
+    return Session
+
+
+@pytest.fixture(scope="function")
+def make_record(db_session):
+    created_records = []
+
+    def _make_record(entity, **kwargs):
+        record = entity(**kwargs)
+        db_session.add(record)
+        created_records.append(record)
+        db_session.commit()
+        return record
+
+    yield _make_record
+    for record in created_records:
+        record.query.delete()
+    db_session.commit()
 
 
 @pytest.fixture
@@ -37,6 +58,7 @@ def client(db_session):
 
 
 def test_insert_user(db_session, make_record):
+    print("INSERT USER")
     make_record(models.User, username="Admin", email="admin@admin.com")
     user = db_session.query(models.User).filter_by(username="Admin").first()
     assert user is not None
@@ -58,10 +80,11 @@ def test_empty_db(client):
 
 
 def test_insert_category(db_session, make_record):
-    user = make_record(models.User, username="Admin1", email="admin1@admin.com")
-    make_record(models.Category, name="Horse Riding", owner=user)
+    print("INSERT CATEGORY")
+    user = make_record(models.User, username="Admin", email="admin@admin.com")
+    make_record(models.Category, name="Horse Riding", owner=user, description="Horse Riding Category.")
 
     category = db_session.query(models.Category).filter_by(name="Horse Riding").first()
     assert category is not None
     assert category.name == "Horse Riding"
-    assert category.owner.username == "Admin1"
+    assert category.owner.username == "Admin"

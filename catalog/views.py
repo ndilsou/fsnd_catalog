@@ -14,8 +14,4 @@ logger.info("Views loaded")
 
 @app.route("/")
 def index():
-    logger.info("Getting Index")
-    sess = Session()
-    users = sess.query(User).all()
-    logging.info(users)
     return render_template("index.html")

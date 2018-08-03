@@ -1,0 +1,25 @@
+[[source]]
+verify_ssl = true
+url = "https://pypi.org/simple"
+name = "pypi"
+
+[packages]
+flask = "*"
+packaging = "*"
+"oauth2client" = "*"
+redis = "*"
+passlib = "*"
+flask-httpauth = "*"
+sqlalchemy = "*"
+flask-sqlalchemy = "*"
+"psycopg2-binary" = "*"
+bleach = "*"
+requests = "*"
+pytest = "*"
+
+[requires]
+python_version = "3.5"
+
+[dev-packages]
+pytest = "*"
+ipython = "*"

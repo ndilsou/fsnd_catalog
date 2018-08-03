@@ -5,12 +5,13 @@ import tempfile
 import catalog
 import catalog.models as models
 
-from test.setup_test_db import populate, make_record
+from test.setup_test_db import make_record
 
 
 @pytest.fixture(scope="session")
 def app():
     return catalog.app
+
 
 @pytest.fixture(scope="module")
 def db_session(app):
@@ -22,8 +23,6 @@ def db_session(app):
         app.config["DATABASE"] = "sqlite:///{}".format(test_db)
 
         catalog.database.init_db(catalog.app)
-        # populate(Session)
-
         yield Session
 
     finally:
@@ -37,7 +36,7 @@ def client(db_session):
     return client
 
 
-def test_session(db_session, make_record):
+def test_insert_user(db_session, make_record):
     make_record(models.User, username="Admin", email="admin@admin.com")
     user = db_session.query(models.User).filter_by(username="Admin").first()
     assert user is not None
@@ -56,3 +55,13 @@ def test_empty_db(client):
 </body>
 </html>"""
     assert page == rv.data.decode("utf-8")
+
+
+def test_insert_category(db_session, make_record):
+    user = make_record(models.User, username="Admin1", email="admin1@admin.com")
+    make_record(models.Category, name="Horse Riding", owner=user)
+
+    category = db_session.query(models.Category).filter_by(name="Horse Riding").first()
+    assert category is not None
+    assert category.name == "Horse Riding"
+    assert category.owner.username == "Admin1"

@@ -1,60 +1,8 @@
 import pytest
-import os
-import tempfile
-
-import catalog
 import catalog.models as models
 
-# from test.setup_test_db import make_record
+from test.fixtures import *
 
-
-@pytest.fixture(scope="module")
-def app():
-    return catalog.app
-
-
-@pytest.fixture(scope="module")
-def database(app):
-    try:
-
-        db_fd, test_db = tempfile.mkstemp(suffix=".db")
-        app.config["DATABASE"] = "sqlite:///{}".format(test_db)
-
-        catalog.database.init_db(catalog.app)
-        yield catalog.database
-
-    finally:
-        os.close(db_fd)
-        os.unlink(test_db)
-
-
-@pytest.fixture(scope="function")
-def db_session(database):
-    from catalog.database import Session
-    return Session
-
-
-@pytest.fixture(scope="function")
-def make_record(db_session):
-    created_records = []
-
-    def _make_record(entity, **kwargs):
-        record = entity(**kwargs)
-        db_session.add(record)
-        created_records.append(record)
-        db_session.commit()
-        return record
-
-    yield _make_record
-    for record in created_records:
-        record.query.delete()
-    db_session.commit()
-
-
-@pytest.fixture
-def client(db_session):
-    client = catalog.app.test_client()
-    return client
 
 
 def test_insert_user(db_session, make_record):
@@ -64,23 +12,7 @@ def test_insert_user(db_session, make_record):
     assert user is not None
 
 
-def test_empty_db(client):
-    rv = client.get("/")
-    page = """<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<header><h1>Welcome to the catalog</h1></header>
-</body>
-</html>"""
-    assert page == rv.data.decode("utf-8")
-
-
 def test_insert_category(db_session, make_record):
-    print("INSERT CATEGORY")
     user = make_record(models.User, username="Admin", email="admin@admin.com")
     make_record(models.Category, name="Horse Riding", owner=user, description="Horse Riding Category.")
 
@@ -88,3 +20,33 @@ def test_insert_category(db_session, make_record):
     assert category is not None
     assert category.name == "Horse Riding"
     assert category.owner.username == "Admin"
+
+
+def test_insert_item(db_session, make_record):
+    user = make_record(models.User, username="Admin", email="admin@admin.com")
+    category = make_record(models.Category, name="Horse Riding", owner=user, description="Horse Riding Category.")
+    make_record(models.Item, name="Stirrup", category=category, description="Gets you on a horse.")
+
+    item = db_session.query(models.Item).filter_by(name="Stirrup").first()
+    assert item is not None
+    assert item.name == "Stirrup"
+    assert item.category.name == "Horse Riding"
+
+
+def test_serialize_entities(db_session, make_record):
+    user = make_record(models.User, username="Admin", email="admin@admin.com")
+    category = make_record(models.Category, name="Horse Riding", owner=user, description="Horse Riding Category.")
+    item = make_record(models.Item, name="Stirrup", category=category, description="Gets you on a horse.")
+
+    assert {"username": "Admin"} == user.to_dict()
+    assert {"name": "Horse Riding", "description": "Horse Riding Category."} == category.to_dict()
+    assert {"name": "Stirrup", "category": "Horse Riding", "description": "Gets you on a horse."} == item.to_dict()
+
+
+def test_seeded_session(seeded_session):
+    users = seeded_session.query(models.User).all()
+    assert len(users) == 2
+    categories = seeded_session.query(models.Category).all()
+    assert len(categories) == 2
+    items = seeded_session.query(models.Item).all()
+    assert len(items) == 5

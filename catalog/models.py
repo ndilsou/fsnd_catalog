@@ -14,8 +14,14 @@ class User(Base):
     def __repr__(self):
         return "<User{{username={}}}>".format(self.username)
 
+    def to_dict(self):
+        return {
+            "username": self.username
+        }
+
 
 class Category(Base):
+    _dict_keys = ["name", "description"]
 
     __tablename__ = "categories"
 
@@ -26,4 +32,32 @@ class Category(Base):
     owner = relationship(User)
 
     def __repr__(self):
-        return "<User{{name={name}}, owner={owner}})>".format(name=self.name, owner=self.owner.username)
+        return "<User{{name={name}}, owner={owner}}}>".format(name=self.name, owner=self.owner.username)
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description
+
+        }
+
+
+class Item(Base):
+    _dict_keys = ["name", "description", "category_id"]
+    __tablename__ = "items"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), nullable=False)
+    description = Column(String(500))
+    category_id = Column(Integer, ForeignKey("categories.id"))
+    category = relationship(Category)
+
+    def __repr__(self):
+        return "<Item{{name={name}, category={category}}}>".format(name=self.name, category=self.category.name)
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "category": self.category.name
+        }

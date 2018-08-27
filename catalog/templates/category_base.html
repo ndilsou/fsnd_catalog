@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block main %}
+          <aside class="categories">
+
+                <h2>Categories</h2>
+
+                <ul>
+                    {% for category in categories %}
+                        <li><a href="{{ url_for("category_view", name=category.name) }}">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </aside>
+
+            {% block content %}{% endblock %}
+{% endblock %}

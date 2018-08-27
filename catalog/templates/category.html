@@ -1,0 +1,8 @@
+{% extends "category_base.html" %}
+{% block content %}
+<h2>{{ category.name }} Items ({{ category.items|length }} Items)</h2>
+
+{% for item in category.items %}
+    <li><a href="{{ url_for("item_view", category_name=item.category.name, name=item.name) }}">{{ item.name }}</a></li>
+{% endfor %}
+{% endblock %}

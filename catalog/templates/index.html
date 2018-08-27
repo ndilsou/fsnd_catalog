@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<header><h1>Welcome to the catalog</h1></header>
-</body>
-</html>
+{% extends "category_base.html" %}
+{% block content %}
+            <h2>Last Items</h2>
+            <ul>
+                {% for item in items %}
+                    <li><a href="{{ url_for("item_view", category_name=item.category.name, name=item.name) }}">{{ item.name }}</a> ({{ item.category.name }})</li>
+                {% endfor %}
+            </ul>
+{% endblock %}

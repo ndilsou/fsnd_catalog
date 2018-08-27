@@ -1,7 +1,7 @@
 import pytest
 import catalog.models as models
 
-from test.fixtures import *
+from tests.fixtures import *
 
 
 def test_insert_user(db_session, make_record):
@@ -49,3 +49,12 @@ def test_seeded_session(seeded_session):
     assert len(categories) == 2
     items = seeded_session.query(models.Item).all()
     assert len(items) == 5
+
+
+def test_category_is_back_populated(db_session, make_record):
+    user = make_record(models.User, username="Admin1", email="admin1@admin.com")
+    category = make_record(models.Category, name="Horse Riding", owner=user, description="Horse Riding Category.")
+    item = make_record(models.Item, name="Stirrup", category=category, description="Gets you on a horse.")
+
+    assert category.items[0] == item
+

@@ -1,7 +1,9 @@
+import datetime
+
 from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
 from catalog.database import Base
-from sqlalchemy import Column, Integer, String, ForeignKey
 
 
 class User(Base):
@@ -30,9 +32,10 @@ class Category(Base):
     description = Column(String(500))
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship(User)
+    items = relationship("Item", backref="items")
 
     def __repr__(self):
-        return "<User{{name={name}}, owner={owner}}}>".format(name=self.name, owner=self.owner.username)
+        return "<Category{{name={name}, owner={owner}}}>".format(name=self.name, owner=self.owner.username)
 
     def to_dict(self):
         return {
@@ -49,6 +52,7 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     description = Column(String(500))
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     category_id = Column(Integer, ForeignKey("categories.id"))
     category = relationship(Category)
 

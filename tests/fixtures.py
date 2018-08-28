@@ -26,32 +26,45 @@ def database(app):
         os.unlink(test_db)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def seeded_session(database):
     from catalog.database import Session
+    try:
+        session = Session()
+        session.add(models.User(username='Admin', email='test@testmail.com'))
+        session.add(models.User(username='John Doe', email='jon.jon.doe@testmail.com'))
 
-    Session.add(models.User(username='Admin', email='test@testmail.com'))
-    Session.add(models.User(username='John Doe', email='jon.jon.doe@testmail.com'))
+        session.add(models.Category(name='Football', description='The real one from Europe.', owner_id=2))
 
-    Session.add(models.Category(name='Football', description='The real one from Europe.', owner_id=2))
+        session.add(models.Item(name='Football ball', description='Rather hard to play without one init?', category_id=1))
+        session.add(models.Item(name='Arsenal Jersey', description='You still there Arsene?', category_id=1))
+        session.add(models.Item(name='Drama Classes', description='Falling on the grass is an art. It takes practice to '
+                                                                  'master it.', category_id=1))
 
-    Session.add(models.Item(name='Football ball', description='Rather hard to play without one init?', category_id=1))
-    Session.add(models.Item(name='Arsenal Jersey', description='You still there Arsene?', category_id=1))
-    Session.add(models.Item(name='Drama Classes', description='Falling on the grass is an art. It takes practice to '
-                                                              'master it.', category_id=1))
+        session.add(models.Category(name='Boxing', description='If you''re up for a good fight.', owner_id=2))
 
-    Session.add(models.Category(name='Boxing', description='If you''re up for a good fight.', owner_id=2))
+        session.add(models.Item(name='Gloves', description='We''re fighters here, not brute.', category_id=2))
+        session.add(models.Item(name='Jumping Rope', description='Just like Rocky.', category_id=2))
+        session.commit()
+        yield session
 
-    Session.add(models.Item(name='Gloves', description='We''re fighters here, not brute.', category_id=2))
-    Session.add(models.Item(name='Jumping Rope', description='Just like Rocky.', category_id=2))
-    Session.commit()
-    return Session
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @pytest.fixture(scope="function")
 def db_session(database):
     from catalog.database import Session
-    return Session
+    try:
+        session = Session()
+        yield session
+
+    finally:
+        session.rollback()
+        session.close()
 
 
 @pytest.fixture(scope="function")

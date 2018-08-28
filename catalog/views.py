@@ -64,7 +64,16 @@ def item_add():
         return render_template("item_add.html", categories=categories)
 
     elif request.method == "POST":
-        logger.debug(request.form)
+        form = request.form
+        with abort_if_raised(404, db_exc.NoResultFound):
+            category = Session.query(models.Category).filter_by(name=form["category"]).one()
+        new_item = models.Item(name=form["name"],
+                               description=form["description"],
+                               category=category)
+
+        Session.add(new_item)
+        Session.commit()
+
         return redirect(url_for("index"), 303)
 
 
@@ -77,7 +86,10 @@ def item_delete(name):
         return render_template("item_delete.html", item=item)
 
     elif request.method == "POST":
-        raise NotImplementedError("Method not supported")
+        Session.delete(item)
+        Session.commit()
+
+        return redirect(url_for("index"), 303)
 
 
 @app.route("/catalog/<string:name>/edit", methods=["GET", "POST"])
@@ -90,5 +102,14 @@ def item_edit(name):
         return render_template("item_edit.html", item=item, categories=categories)
 
     elif request.method == "POST":
-        raise NotImplementedError("Method not supported")
+        form = request.form
+        item.name = form["name"]
+        item.description = form["description"]
+        with abort_if_raised(404, db_exc.NoResultFound):
+            category = Session.query(models.Category).filter_by(name=form["category"]).one()
+        item.category = category
 
+        Session.add(item)
+        Session.commit()
+
+        return redirect(url_for("index"), 303)

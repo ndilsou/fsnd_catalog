@@ -1,5 +1,6 @@
 {% extends "category_base.html" %}
 {% block content %}
+            <a href="{{ url_for("item_add") }}"> Add Item</a>
             <h2>Last Items</h2>
             <ul>
                 {% for item in items %}

@@ -1,0 +1,16 @@
+{%  extends "base.html" %}
+{% block main %}
+<form action="{{ url_for("item_edit", name=item.name) }}" method="post">
+    Title<br>
+    <input type="text" name="name" value="{{ item.name }}">
+    <br>Description<br>
+    <input type="text" name="description" value="{{ item.description }}">
+    <br>Category<br>
+    <select name="category">
+        {% for category in categories %}
+            <option value="{{ category.name }}">{{ category.name }}</option>
+        {% endfor %}
+    </select><br>
+    <input type="submit" value="Submit">
+</form>
+{% endblock %}

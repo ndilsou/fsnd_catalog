@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block main %}
+<h2>Delete Item</h2>
+<form action="{{ url_for("item_delete", name=item.name) }}" method="post">
+    Are you sure you want to delete?<br>
+  <input type="submit" value="Submit">
+</form>
+{% endblock %}
